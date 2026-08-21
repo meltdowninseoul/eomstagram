@@ -474,7 +474,6 @@
         <div class="fullname" id="profFullname">홍길동</div>
         <div class="bio" id="profBio">📸 일상을 기록합니다
 ✈️ 여행 좋아함</div>
-        <div class="story-hint" id="storyHint"></div>
       </div>
     </div>
 
@@ -513,7 +512,7 @@
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V6a3 3 0 0 1 3-3h11a4 4 0 0 1 4 4z"/></svg>
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
       </div>
-      <div class="pd-likes">좋아요 128개</div>
+      <div class="pd-likes" id="pdLikes">좋아요 <span id="pdLikesCount">128</span>개</div>
       <div class="pd-caption"><b id="pdCaptionUser">yourname</b><span id="pdCaptionText"></span></div>
       <div class="pd-comments-header">댓글 <span id="pdCommentCount">0</span>개</div>
       <div class="pd-comments" id="pdComments"></div>
@@ -558,9 +557,9 @@
      - avatar   : 프로필 사진 URL
   --------------------------------------------------------------------- */
   let profile = {
-    fullname: "eom",
+    fullname: "성현이",
     username: "whereiseom",
-    bio: "@juhoon 거",
+    bio: "@juhoon 이 사람 거",
     avatar: "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FHXKzv%2FdJMcajwE4Tf%2FAAAAAAAAAAAAAAAAAAAAAFzXspAeRO2G9hRaeChXZf7GY5H-KpS7ec9y_epIca2U%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3Dhds17QfsWfCv7S%252BE5%252FDuRzhJM%252Bg%253D"
   };
 
@@ -572,11 +571,13 @@
                  ["url1","url2","url3"] 처럼 배열을 넣으면 됩니다.
                  (게시물 상세 화면에서 옆으로 넘겨볼 수 있게 자동 처리됩니다)
      - caption : 문구
+     - likes   : 좋아요 개수 (숫자로 입력, 생략하면 기본값 128)
      최대 9개까지 3x3 그리드에 순서대로 표시됩니다.
   --------------------------------------------------------------------- */
   let posts = [
     {type:"image", src:["https://picsum.photos/seed/p1/500/500","https://picsum.photos/seed/p1b/500/500","https://picsum.photos/seed/p1c/500/500"], caption:"오늘의 하늘 🌤️ (여러 장)"},
     {type:"image", src:"https://picsum.photos/seed/p2/500/500", caption:"주말 브런치 🍳"},
+    {type:"image", src:"https://picsum.photos/seed/p3/500/500", caption:"산책하기 좋은 날"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbwmEwf%2FdJMcafucwIb%2FAAAAAAAAAAAAAAAAAAAAAH5PQdkWhmE-kN_eMHnbJsDii0UzmR9R-Cu6au3B-QUr%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DfIC0RmgFxxoY%252BanEFj0F6B6NzA0%253D", caption:"넷플릭스 앤 칠"},
     {type:"image", src:["https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FGgCso%2FdJMcabZJQh4%2FAAAAAAAAAAAAAAAAAAAAAMVpxTm6_oOHjJBXxC-8r6x8q5GZJDLzn3eFAFOIcV2s%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DM%252BgHfdS1B2uhXvBCSA8B69i%252Bp88%253D","https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fba4daU%2FdJMcaf1ZUUk%2FAAAAAAAAAAAAAAAAAAAAAMIIT-GvHvN3lz8BBY6bszwVUh2sKwWgU47CDWeaB-4e%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DQUIsUpch23yoi6E6disKESfoaSE%253D"], caption:"잘 때 제일 예쁨"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FyYta8%2FdJMcabZJQh3%2FAAAAAAAAAAAAAAAAAAAAAP18QAGzjFWdcsiF2imxLUNJhpFuZLHIaVAkJqu2Invm%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D12tQtR%252BwlXYT31qB0g2oaqE5r3U%253D", caption:"나 왜 찍어"},
@@ -661,13 +662,10 @@
 
   function updateAvatarRing(){
     const ring = document.getElementById('avatarRing');
-    const hint = document.getElementById('storyHint');
     if(myStories.length > 0){
       ring.classList.add('has-story');
-      hint.textContent = "프로필 사진을 눌러 내 스토리를 확인하세요";
     } else {
       ring.classList.remove('has-story');
-      hint.textContent = "프로필 사진을 눌러 스토리를 올려보세요";
     }
   }
 
@@ -786,6 +784,7 @@
       }
     }
     currentPostKey = currentTab + '_' + i;
+    document.getElementById('pdLikesCount').textContent = (typeof p.likes === 'number') ? p.likes : 128;
     renderComments();
     openScreen('postDetailScreen');
   }
