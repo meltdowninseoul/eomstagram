@@ -172,10 +172,7 @@
     filter:drop-shadow(0 0 2px rgba(0,0,0,.6));
   }
   .cell.empty{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#c7c7c7;
+    background:#fff;
   }
 
   /* 두 번째 탭(유튜브) 전용 레이아웃: 정사각형 대신 16:9 영상 비율 */
@@ -561,9 +558,9 @@
      - avatar   : 프로필 사진 URL
   --------------------------------------------------------------------- */
   let profile = {
-    fullname: "성현이",
+    fullname: "eom",
     username: "whereiseom",
-    bio: "@juhoon 이 사람 거",
+    bio: "@juhoon 거",
     avatar: "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FHXKzv%2FdJMcajwE4Tf%2FAAAAAAAAAAAAAAAAAAAAAFzXspAeRO2G9hRaeChXZf7GY5H-KpS7ec9y_epIca2U%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3Dhds17QfsWfCv7S%252BE5%252FDuRzhJM%252Bg%253D"
   };
 
@@ -580,7 +577,6 @@
   let posts = [
     {type:"image", src:["https://picsum.photos/seed/p1/500/500","https://picsum.photos/seed/p1b/500/500","https://picsum.photos/seed/p1c/500/500"], caption:"오늘의 하늘 🌤️ (여러 장)"},
     {type:"image", src:"https://picsum.photos/seed/p2/500/500", caption:"주말 브런치 🍳"},
-    {type:"image", src:"https://picsum.photos/seed/p3/500/500", caption:"산책하기 좋은 날"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbwmEwf%2FdJMcafucwIb%2FAAAAAAAAAAAAAAAAAAAAAH5PQdkWhmE-kN_eMHnbJsDii0UzmR9R-Cu6au3B-QUr%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DfIC0RmgFxxoY%252BanEFj0F6B6NzA0%253D", caption:"넷플릭스 앤 칠"},
     {type:"image", src:["https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FGgCso%2FdJMcabZJQh4%2FAAAAAAAAAAAAAAAAAAAAAMVpxTm6_oOHjJBXxC-8r6x8q5GZJDLzn3eFAFOIcV2s%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DM%252BgHfdS1B2uhXvBCSA8B69i%252Bp88%253D","https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fba4daU%2FdJMcaf1ZUUk%2FAAAAAAAAAAAAAAAAAAAAAMIIT-GvHvN3lz8BBY6bszwVUh2sKwWgU47CDWeaB-4e%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DQUIsUpch23yoi6E6disKESfoaSE%253D"], caption:"잘 때 제일 예쁨"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FyYta8%2FdJMcabZJQh3%2FAAAAAAAAAAAAAAAAAAAAAP18QAGzjFWdcsiF2imxLUNJhpFuZLHIaVAkJqu2Invm%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D12tQtR%252BwlXYT31qB0g2oaqE5r3U%253D", caption:"나 왜 찍어"},
@@ -702,7 +698,7 @@
       // 두 번째 탭: 유튜브 영상 비율(16:9)에 맞춘 세로 리스트
       grid.classList.add('video-mode');
       if(list.length === 0){
-        grid.innerHTML = `<div class="cell empty" style="aspect-ratio:16/9;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c7c7c7" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>`;
+        grid.innerHTML = `<div class="cell empty" style="aspect-ratio:16/9;"></div>`;
         return;
       }
       list.forEach((p, i)=>{
@@ -745,7 +741,6 @@
         cell.addEventListener('click', ()=> openPostDetail(i));
       } else {
         cell.className = "cell empty";
-        cell.innerHTML = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c7c7c7" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
       }
       grid.appendChild(cell);
     }
