@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>인스타그램 클론</title>
+<title>해시태그형만봐</title>
 <style>
   :root{
     --blue:#0095f6;
@@ -14,38 +14,26 @@
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
     height:100%;
-    background:#000;
+    background:#fff;
     font-family:-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   body{
     display:flex;
-    align-items:center;
-    justify-content:center;
     min-height:100vh;
   }
 
-  /* ---- phone frame ---- */
+  /* ---- app container (프레임 없이 화면 전체 사용) ---- */
   .phone{
-    width:390px;
-    height:844px;
+    width:100%;
+    max-width:520px;
+    margin:0 auto;
+    height:100vh;
     background:#fff;
-    border-radius:44px;
-    box-shadow:0 0 0 10px #111, 0 20px 60px rgba(0,0,0,.5);
     overflow:hidden;
     position:relative;
     display:flex;
     flex-direction:column;
-  }
-  .notch{
-    position:absolute;
-    top:0; left:50%;
-    transform:translateX(-50%);
-    width:150px; height:28px;
-    background:#111;
-    border-bottom-left-radius:16px;
-    border-bottom-right-radius:16px;
-    z-index:50;
   }
 
   /* ---- screens ---- */
@@ -66,7 +54,6 @@
     justify-content:space-between;
     padding:0 14px;
     border-bottom:1px solid var(--border);
-    margin-top:28px;
   }
   .topbar .username{
     font-size:19px;
@@ -222,7 +209,7 @@
     z-index:30;
   }
   .subscreen.open{ transform:translateX(0); }
-  .subscreen .topbar{ margin-top:28px; }
+  .subscreen .topbar{}
   .subscreen .topbar .title{
     font-size:16px; font-weight:700;
   }
@@ -320,6 +307,83 @@
   }
   .pd-caption b{ margin-right:6px; }
 
+  /* comments */
+  .pd-comments-header{
+    padding:2px 12px 8px 12px;
+    font-size:12.5px;
+    color:var(--gray-text);
+    font-weight:600;
+  }
+  .pd-comments{
+    padding:0 12px 14px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .pd-comment-empty{
+    font-size:13px;
+    color:var(--gray-text);
+    padding:4px 0;
+  }
+  .pd-comment{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .pd-comment-text{
+    font-size:13.5px;
+    line-height:1.4;
+    word-break:break-word;
+  }
+  .pd-comment-text b{ margin-right:6px; }
+  .pd-comment-del{
+    flex-shrink:0;
+    background:none;
+    border:none;
+    color:var(--gray-text);
+    font-size:11.5px;
+    cursor:pointer;
+    padding:2px 4px;
+  }
+  .pd-comment-del:hover{ color:#ed4956; }
+  .pd-comment-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-top:1px solid var(--border);
+  }
+  .pd-comment-name-input{
+    width:64px;
+    flex-shrink:0;
+    border:none;
+    outline:none;
+    font-size:13px;
+    padding:8px 0;
+  }
+  .pd-comment-text-input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:13.5px;
+    padding:8px 0;
+  }
+  .pd-comment-submit{
+    flex-shrink:0;
+    background:none;
+    border:none;
+    color:var(--blue);
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    padding:6px 4px;
+  }
+  .pd-comment-submit:disabled{
+    color:#b2dffc;
+    cursor:default;
+  }
+
   /* story viewer */
   #storyViewerScreen{
     background:#000;
@@ -328,7 +392,6 @@
     display:flex;
     gap:4px;
     padding:8px 10px 0 10px;
-    margin-top:28px;
   }
   .story-progress-row .bar{
     flex:1;
@@ -386,7 +449,6 @@
 <body>
 
 <div class="phone">
-  <div class="notch"></div>
 
   <!-- ============ FEED / PROFILE SCREEN ============ -->
   <div class="screen" id="feedScreen">
@@ -456,7 +518,14 @@
       </div>
       <div class="pd-likes">좋아요 128개</div>
       <div class="pd-caption"><b id="pdCaptionUser">yourname</b><span id="pdCaptionText"></span></div>
+      <div class="pd-comments-header">댓글 <span id="pdCommentCount">0</span>개</div>
+      <div class="pd-comments" id="pdComments"></div>
     </div>
+    <form class="pd-comment-bar" id="pdCommentForm">
+      <input type="text" id="pdCommentName" class="pd-comment-name-input" placeholder="닉네임" maxlength="20">
+      <input type="text" id="pdCommentText" class="pd-comment-text-input" placeholder="댓글 달기..." maxlength="300" required>
+      <button type="submit" class="pd-comment-submit">게시</button>
+    </form>
   </div>
 
   <!-- ============ 내 스토리 뷰어 SUBSCREEN ============ -->
@@ -495,7 +564,7 @@
     fullname: "성현이",
     username: "whereiseom",
     bio: "@juhoon 이 사람 거",
-    avatar: "https://picsum.photos/seed/myavatar/200/200"
+    avatar: "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FHXKzv%2FdJMcajwE4Tf%2FAAAAAAAAAAAAAAAAAAAAAFzXspAeRO2G9hRaeChXZf7GY5H-KpS7ec9y_epIca2U%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3Dhds17QfsWfCv7S%252BE5%252FDuRzhJM%252Bg%253D"
   };
 
   /* ---------------------------------------------------------------------
@@ -512,12 +581,13 @@
     {type:"image", src:["https://picsum.photos/seed/p1/500/500","https://picsum.photos/seed/p1b/500/500","https://picsum.photos/seed/p1c/500/500"], caption:"오늘의 하늘 🌤️ (여러 장)"},
     {type:"image", src:"https://picsum.photos/seed/p2/500/500", caption:"주말 브런치 🍳"},
     {type:"image", src:"https://picsum.photos/seed/p3/500/500", caption:"산책하기 좋은 날"},
-    {type:"image", src:"https://picsum.photos/seed/p4/500/500", caption:"새로 산 신발 👟"},
-    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FGgCso%2FdJMcabZJQh4%2FAAAAAAAAAAAAAAAAAAAAAMVpxTm6_oOHjJBXxC-8r6x8q5GZJDLzn3eFAFOIcV2s%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DM%252BgHfdS1B2uhXvBCSA8B69i%252Bp88%253D", caption:"잘 때 제일 예쁨"},
-    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FyYta8%2FdJMcabZJQh3%2FAAAAAAAAAAAAAAAAAAAAAP18QAGzjFWdcsiF2imxLUNJhpFuZLHIaVAkJqu2Invm%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D12tQtR%252BwlXYT31qB0g2oaqE5r3U%253D", caption:"나 왜 찍"},
+    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbwmEwf%2FdJMcafucwIb%2FAAAAAAAAAAAAAAAAAAAAAH5PQdkWhmE-kN_eMHnbJsDii0UzmR9R-Cu6au3B-QUr%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DfIC0RmgFxxoY%252BanEFj0F6B6NzA0%253D", caption:"넷플릭스 앤 칠"},
+    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FGgCso%2FdJMcabZJQh4%2FAAAAAAAAAAAAAAAAAAAAAMVpxTm6_oOHjJBXxC-8r6x8q5GZJDLzn3eFAFOIcV2s%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DM%252BgHfdS1B2uhXvBCSA8B69i%252Bp88%253D","https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fba4daU%2FdJMcaf1ZUUk%2FAAAAAAAAAAAAAAAAAAAAAMIIT-GvHvN3lz8BBY6bszwVUh2sKwWgU47CDWeaB-4e%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DQUIsUpch23yoi6E6disKESfoaSE%253D", caption:"잘 때 제일 예쁨"},
+    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FyYta8%2FdJMcabZJQh3%2FAAAAAAAAAAAAAAAAAAAAAP18QAGzjFWdcsiF2imxLUNJhpFuZLHIaVAkJqu2Invm%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D12tQtR%252BwlXYT31qB0g2oaqE5r3U%253D", caption:"나 왜 찍어"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FuhB2c%2FdJMcaf1ZUUj%2FAAAAAAAAAAAAAAAAAAAAAAtM4yEmMzg_TYLXLJ7KBjL94G0Lj8a0wM4KB3XZZzaI%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DTVh0E%252FQCZ4hPH0D7T0eFtHtfRFw%253D", caption:"듣는 중"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fc72Yu0%2FdJMcafucwIe%2FAAAAAAAAAAAAAAAAAAAAAP5714mhbQb2VZi9_c-QsY0dVn0E6XtzlQBgv1ZvbNgK%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D7fzDfnHfx9O5BIk3hNGmfzSS%252BTQ%253D", caption:"보면 닳나"},
     {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fb8hP6u%2FdJMcabZJQh5%2FAAAAAAAAAAAAAAAAAAAAAEl7Q58W6881Zwm7477GmfYQeE11f1-0IqDNg0PhYpR8%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DfAeVoxcDYkuna3Hbw%252FQif1%252F1Zy0%253D", caption:"D+1"}
+ {type:"image", src:["https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FBBkrs%2FdJMcabMeKqO%2FAAAAAAAAAAAAAAAAAAAAAMEHNbzXIKw98E2eHCmOjo57DPYeAQXjj9cYehoDU-E7%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DmG1rtbLr4JUqMavWrxNWRp4rs7o%253D","https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbK505n%2FdJMcac5jBGB%2FAAAAAAAAAAAAAAAAAAAAAAGuNBMXAzDfT-en87QT3ZZacr01lmiumkMyxeEUp5Cq%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D7bguQg5%252FahfGedJNHedDSr6mMFg%253D","https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fbvz668%2FdJMcabMeKqB%2FAAAAAAAAAAAAAAAAAAAAAJBhYf1axYn9rPosLrRUDKQ4bgjA9gEpWEUlE_Fph9Uw%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D7heVNJYkW4U%252Bd05G8lViHk3k%252BSU%253D"], caption:"OOTD"}
   ];
 
   /* ---------------------------------------------------------------------
@@ -528,8 +598,6 @@
   --------------------------------------------------------------------- */
   let youtubePosts = [
     {type:"youtube", src:"https://youtu.be/Dz9TQcPmX1o?si=PHWJ9TE8aN1H1lEm", caption:"bbf"},
-    {type:"youtube", src:"https://youtu.be/jh0YLzH1Nk8?si=mAuv-OOSWM5cl1pY", caption:"♡"},
-    {type:"youtube", src:"https://youtu.be/dktKWcp7PwI?si=RZH3Fy_3eVl7ghq5", caption:"ㅃㅃ"}
   ];
 
   /* ---------------------------------------------------------------------
@@ -539,8 +607,7 @@
      가능합니다.
   --------------------------------------------------------------------- */
   let taggedPosts = [
-    {type:"image", src:"https://picsum.photos/seed/t1/500/500", caption:"함께 찍은 사진"},
-    {type:"youtube", src:"https://www.youtube.com/watch?v=2Vv-BfVoq4g", caption:"같이 나온 영상"}
+    {type:"image", src:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FoAmnD%2FdJMcabZJQh2%2FAAAAAAAAAAAAAAAAAAAAAK4OUuFlk-cx-V835rkH14rYUhb1SrZ7ciZE8ykWSzOI%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DGm%252BOWzxEFnoD9YetQHsDmzblVlQ%253D", caption:"@juhoon 형 ㅅㅏ랑해"},
   ];
 
   /* ---------------------------------------------------------------------
@@ -553,9 +620,32 @@
      예: let myStories = [{media:"이미지1"}, {media:"이미지2"}];
   --------------------------------------------------------------------- */
   let myStories = [
+     {media:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbwpBea%2FdJMb991SwDj%2FAAAAAAAAAAAAAAAAAAAAAFqjW_MKT-xMTc7Nj8buZvJ_FCa63YLWOH0rNMAeBZoo%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3DilhjR8sFsMflqfqY4QuSfZ9Idz0%253D"},
     {media:"https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FDT4dV%2FdJMcabZJQh1%2FAAAAAAAAAAAAAAAAAAAAAOObe1SOHmif4uXEKzwSdAWcTOxAp9ekFvFMkZweBu3Y%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1788188399%26allow_ip%3D%26allow_referer%3D%26signature%3D4lOzbHNs6Pc1JzkzKadaqynn1j0%253D"},
-    {media:"https://picsum.photos/seed/story2/400/700"}
   ];
+
+  /* ---------------------------------------------------------------------
+     [6] 댓글 삭제 비밀번호
+     - 댓글 삭제 버튼을 누르면 이 비밀번호를 물어봅니다.
+     - 원하는 값으로 바꿔서 나만 삭제할 수 있게 하세요.
+  --------------------------------------------------------------------- */
+  let commentPassword = "0817";
+
+  // 댓글은 브라우저(localStorage)에 저장되어 새로고침해도 유지됩니다.
+  let allComments = {};
+  try{
+    allComments = JSON.parse(localStorage.getItem('igCloneComments') || '{}');
+  }catch(e){
+    allComments = {};
+  }
+  function saveComments(){
+    try{ localStorage.setItem('igCloneComments', JSON.stringify(allComments)); }catch(e){}
+  }
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
 
   // ---------- helpers ----------
   function extractYoutubeId(url){
@@ -700,8 +790,65 @@
         media.innerHTML = `<img src="${images[0]}" alt="post">`;
       }
     }
+    currentPostKey = currentTab + '_' + i;
+    renderComments();
     openScreen('postDetailScreen');
   }
+
+  // ---------- 댓글 ----------
+  let currentPostKey = null;
+
+  function renderComments(){
+    const list = allComments[currentPostKey] || [];
+    const wrap = document.getElementById('pdComments');
+    document.getElementById('pdCommentCount').textContent = list.length;
+
+    if(list.length === 0){
+      wrap.innerHTML = `<div class="pd-comment-empty">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</div>`;
+      return;
+    }
+
+    wrap.innerHTML = list.map((c, idx) => `
+      <div class="pd-comment">
+        <span class="pd-comment-text"><b>${escapeHtml(c.name)}</b>${escapeHtml(c.text)}</span>
+        <button class="pd-comment-del" data-idx="${idx}">삭제</button>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.pd-comment-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = Number(btn.dataset.idx);
+        const pw = prompt('댓글을 삭제하려면 비밀번호를 입력하세요.');
+        if(pw === null) return;
+        if(pw === commentPassword){
+          const list = allComments[currentPostKey] || [];
+          list.splice(idx, 1);
+          allComments[currentPostKey] = list;
+          saveComments();
+          renderComments();
+        } else {
+          alert('비밀번호가 올바르지 않습니다.');
+        }
+      });
+    });
+  }
+
+  document.getElementById('pdCommentForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!currentPostKey) return;
+    const nameInput = document.getElementById('pdCommentName');
+    const textInput = document.getElementById('pdCommentText');
+    const name = nameInput.value.trim() || '익명';
+    const text = textInput.value.trim();
+    if(!text) return;
+
+    if(!allComments[currentPostKey]) allComments[currentPostKey] = [];
+    allComments[currentPostKey].push({name, text});
+    saveComments();
+
+    textInput.value = '';
+    renderComments();
+  });
 
   function openScreen(id){
     document.getElementById(id).classList.add('open');
