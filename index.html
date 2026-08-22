@@ -622,6 +622,9 @@
     cursor:default;
   }
 </style>
+  <!-- 🔥 Firebase (댓글/디엠을 서버에 저장해서 다른 사람 브라우저에서도 보이게 함) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -760,6 +763,37 @@
 </div>
 
 <script>
+  /* =========================================================================
+     🔥 [0] Firebase 설정
+     - 아래 firebaseConfig 값을 본인 Firebase 프로젝트 값으로 바꿔주세요.
+       (Firebase 콘솔 -> 프로젝트 설정 -> 내 앱 -> SDK 설정 및 구성 에서 복사)
+     - 값을 안 채우고 그대로 두면(placeholder 상태) 자동으로 이전처럼
+       localStorage(내 브라우저에만 저장)로 동작하니, 지금 당장 안 채워도
+       에러 없이 잘 돌아갑니다.
+     - 값을 채우면: 댓글 / 디엠(내가 보낸 메시지)이 Firestore(구글 서버)에
+       저장돼서, 누가 어떤 브라우저로 열어서 보내든 전부 같은 곳에 모여요.
+  ========================================================================= */
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcRfDnVxc6nNALZl42pJYtGN5VDN9ycC8",
+    authDomain: "eomstagram.firebaseapp.com",
+    projectId: "eomstagram",
+    storageBucket: "eomstagram.firebasestorage.app",
+    messagingSenderId: "811687195149",
+    appId: "1:811687195149:web:98ce826e4eeba266499b44"
+  };
+
+  let fbEnabled = false;
+  let db = null;
+  try{
+    if(firebaseConfig.apiKey && firebaseConfig.apiKey.indexOf("여기에_본인") === -1){
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      fbEnabled = true;
+    }
+  }catch(e){
+    console.warn('Firebase 초기화 실패, localStorage로 대신 동작합니다.', e);
+    fbEnabled = false;
+  }
   /* =====================================================================
      이 파일은 업로드 버튼 없이, 아래 데이터를 직접 수정해서 내용을
      채우는 방식으로 만들어졌습니다. (앱 화면에는 "게시물 올리기" 같은
@@ -856,7 +890,7 @@
   let dmContact = {
     name: profile.username,
     avatar: profile.avatar,
-    status: "인스타그램"
+    status: "주훈이 형 거"
   };
 
   /* ---------------------------------------------------------------------
@@ -895,9 +929,12 @@
      (mine:true, 오른쪽)로 자동 저장되며, 새로고침해도 유지됩니다.
   --------------------------------------------------------------------- */
   let dmMessages = [
-       {text:"자냐", time:new Date("2026-08-17T23:59:00").getTime()},
-       {system:true, text:"테마를 Love로 변경했습니다", time:new Date("2026-08-18T00:00:00").getTime()},
-       {text:"성현이 안 잔다", time:new Date("2026-08-20T23:59:00").getTime()},
+       {text:"형 우리 오늘 1 일", time:new Date("2026-08-17T23:59:00").getTime()},
+       {system:true, text:"테마를 Love(으)로 변경했습니다", time:new Date("2026-08-18T00:00:00").getTime()},
+       {text:"좋아한다는 말을 일찍 떼서 남자 친구가 되면 뭐가 다를까 생각했는데 많이 다르다", time:new Date("2026-08-18T23:59:00").getTime()},
+       {text:"남자 친구가 되고 나니까 더 좋은 걸 설명하는 한국어 알고 있으면 알려 줘", time:new Date("2026-08-18T23:59:00").getTime()},
+       {text:"트레이너도 울리고 나는 더 울리는 이상한 남자 친구 뵙습니다", time:new Date("2026-08-19T23:59:00").getTime()},
+       {text:"아침에 일어나서 칭찬해 달라고 하는 형 진짜 귀여워서 죽음", time:new Date("2026-08-21T08:59:00").getTime()},
   ];
 
   /* ---------------------------------------------------------------------
@@ -916,16 +953,21 @@
   // 위 dmMessages를 "원본" 상태로 따로 보관 (초기화 버튼에서 사용)
   const defaultDmMessages = JSON.parse(JSON.stringify(dmMessages));
 
-  // 댓글은 브라우저(localStorage)에 저장되어 새로고침해도 유지됩니다.
+  // 댓글: Firebase 연동 안 했으면 브라우저(localStorage)에 저장,
+  // 연동했으면 Firestore(서버)에 저장되어 누구한테나 같이 보입니다.
   let allComments = {};
-  try{
-    allComments = JSON.parse(localStorage.getItem('igCloneComments') || '{}');
-  }catch(e){
-    allComments = {};
+  if(!fbEnabled){
+    try{
+      allComments = JSON.parse(localStorage.getItem('igCloneComments') || '{}');
+    }catch(e){
+      allComments = {};
+    }
   }
   function saveComments(){
+    if(fbEnabled) return; // Firestore 모드에서는 각 동작(추가/삭제)에서 바로 서버에 반영하므로 여기선 아무것도 안 함
     try{ localStorage.setItem('igCloneComments', JSON.stringify(allComments)); }catch(e){}
   }
+  let currentCommentsUnsub = null;
   function escapeHtml(str){
     const div = document.createElement('div');
     div.textContent = str;
@@ -1073,7 +1115,27 @@
     }
     currentPostKey = currentTab + '_' + i;
     document.getElementById('pdLikesCount').textContent = (typeof p.likes === 'number') ? p.likes : 128;
-    renderComments();
+
+    if(currentCommentsUnsub){ currentCommentsUnsub(); currentCommentsUnsub = null; }
+    if(fbEnabled){
+      currentCommentsUnsub = db.collection('comments')
+        .where('postKey', '==', currentPostKey)
+        .orderBy('time')
+        .onSnapshot(snapshot=>{
+          const list = [];
+          snapshot.forEach(doc=>{
+            const d = doc.data();
+            list.push({name: d.name, text: d.text, _id: doc.id});
+          });
+          allComments[currentPostKey] = list;
+          renderComments();
+        }, err=>{
+          console.warn('댓글 실시간 동기화 실패', err);
+        });
+    } else {
+      renderComments();
+    }
+
     openScreen('postDetailScreen');
   }
 
@@ -1102,14 +1164,22 @@
         const idx = Number(btn.dataset.idx);
         const pw = prompt('댓글을 삭제하려면 비밀번호를 입력하세요.');
         if(pw === null) return;
-        if(pw === commentPassword){
-          const list = allComments[currentPostKey] || [];
+        if(pw !== commentPassword){
+          alert('비밀번호가 올바르지 않습니다.');
+          return;
+        }
+        const list = allComments[currentPostKey] || [];
+        const target = list[idx];
+        if(fbEnabled && target && target._id){
+          db.collection('comments').doc(target._id).delete().catch(err=>{
+            alert('삭제 중 오류가 발생했어요: ' + err.message);
+          });
+          // 실시간 리스너(onSnapshot)가 자동으로 화면을 다시 그려줍니다.
+        } else {
           list.splice(idx, 1);
           allComments[currentPostKey] = list;
           saveComments();
           renderComments();
-        } else {
-          alert('비밀번호가 올바르지 않습니다.');
         }
       });
     });
@@ -1123,13 +1193,21 @@
     const name = nameInput.value.trim() || '익명';
     const text = textInput.value.trim();
     if(!text) return;
-
-    if(!allComments[currentPostKey]) allComments[currentPostKey] = [];
-    allComments[currentPostKey].push({name, text});
-    saveComments();
-
     textInput.value = '';
-    renderComments();
+
+    if(fbEnabled){
+      db.collection('comments').add({
+        postKey: currentPostKey, name, text, time: Date.now()
+      }).catch(err=>{
+        alert('댓글 등록 중 오류가 발생했어요: ' + err.message);
+      });
+      // 실시간 리스너(onSnapshot)가 자동으로 화면을 다시 그려줍니다.
+    } else {
+      if(!allComments[currentPostKey]) allComments[currentPostKey] = [];
+      allComments[currentPostKey].push({name, text});
+      saveComments();
+      renderComments();
+    }
   });
 
   function openScreen(id){
@@ -1140,21 +1218,27 @@
   }
 
   // ---------- 디엠(DM) ----------
-  try{
-    const savedVersion = localStorage.getItem('igCloneDmMessagesVersion');
-    const saved = JSON.parse(localStorage.getItem('igCloneDmMessages') || 'null');
-    if(Array.isArray(saved) && String(savedVersion) === String(dmMessagesVersion)){
-      // 버전이 같으면 저장된 대화(직접 보낸 메시지 포함)를 그대로 사용
-      dmMessages = saved;
-    } else {
-      // 버전이 다르거나 저장된 값이 없으면 코드에 적힌 최신 내용으로 새로 시작
-      dmMessages = JSON.parse(JSON.stringify(defaultDmMessages));
-    }
-  }catch(e){}
+  // 왼쪽(eom이 보낸 것으로 보이는) 대사는 항상 코드에 적힌 defaultDmMessages를
+  // 그대로 씁니다. 오른쪽(직접 입력해서 보낸 메시지)만 Firebase 연동 여부에
+  // 따라 Firestore(서버) 또는 localStorage(내 브라우저)에 저장됩니다.
+  if(!fbEnabled){
+    try{
+      const savedVersion = localStorage.getItem('igCloneDmMessagesVersion');
+      const saved = JSON.parse(localStorage.getItem('igCloneDmMessages') || 'null');
+      if(Array.isArray(saved) && String(savedVersion) === String(dmMessagesVersion)){
+        // 버전이 같으면 저장된 대화(직접 보낸 메시지 포함)를 그대로 사용
+        dmMessages = saved;
+      } else {
+        // 버전이 다르거나 저장된 값이 없으면 코드에 적힌 최신 내용으로 새로 시작
+        dmMessages = JSON.parse(JSON.stringify(defaultDmMessages));
+      }
+    }catch(e){}
+  }
 
   dmMessages.forEach(m=>{ if(!m.time) m.time = Date.now(); });
 
   function saveDmMessages(){
+    if(fbEnabled) return; // Firestore 모드에서는 각 동작에서 바로 서버에 반영
     try{
       localStorage.setItem('igCloneDmMessages', JSON.stringify(dmMessages));
       localStorage.setItem('igCloneDmMessagesVersion', String(dmMessagesVersion));
@@ -1162,11 +1246,38 @@
   }
 
   function resetDmMessages(){
+    if(fbEnabled){
+      if(!confirm('대화를 초기화할까요? 다른 사람이 보낸 메시지까지 전부 삭제됩니다.')) return;
+      db.collection('dmMessages').get().then(snapshot=>{
+        const batch = db.batch();
+        snapshot.forEach(doc=> batch.delete(doc.ref));
+        return batch.commit();
+      }).catch(err=>{
+        alert('초기화 중 오류가 발생했어요: ' + err.message);
+      });
+      // 실시간 리스너(onSnapshot)가 자동으로 화면을 다시 그려줍니다.
+      return;
+    }
     if(!confirm('대화를 초기화할까요? 직접 보낸 메시지가 모두 삭제됩니다.')) return;
     dmMessages = JSON.parse(JSON.stringify(defaultDmMessages));
     dmMessages.forEach(m=>{ if(!m.time) m.time = Date.now(); });
     saveDmMessages();
     renderDm();
+  }
+
+  if(fbEnabled){
+    db.collection('dmMessages').orderBy('time').onSnapshot(snapshot=>{
+      const synced = [];
+      snapshot.forEach(doc=>{
+        const d = doc.data();
+        synced.push({text: d.text, time: d.time, mine: true, _id: doc.id});
+      });
+      dmMessages = JSON.parse(JSON.stringify(defaultDmMessages)).concat(synced);
+      dmMessages.sort((a,b)=> a.time - b.time);
+      renderDm();
+    }, err=>{
+      console.warn('디엠 실시간 동기화 실패', err);
+    });
   }
 
   function formatDmDate(ts){
@@ -1251,10 +1362,18 @@
     const input = document.getElementById('dmInput');
     const text = input.value.trim();
     if(!text) return;
-    dmMessages.push({text, time: Date.now(), mine: true});
-    saveDmMessages();
     input.value = '';
-    renderDm();
+
+    if(fbEnabled){
+      db.collection('dmMessages').add({text, time: Date.now()}).catch(err=>{
+        alert('메시지 전송 중 오류가 발생했어요: ' + err.message);
+      });
+      // 실시간 리스너(onSnapshot)가 자동으로 화면을 다시 그려줍니다.
+    } else {
+      dmMessages.push({text, time: Date.now(), mine: true});
+      saveDmMessages();
+      renderDm();
+    }
   });
 
   document.querySelectorAll('[data-close]').forEach(btn=>{
