@@ -207,6 +207,10 @@
   }
   .subscreen.open{ transform:translateX(0); }
   .subscreen .topbar{}
+  #dmScreen .topbar{
+    background:#fff0f5;
+    border-bottom:1px solid #ffd3e2;
+  }
   .subscreen .topbar .title{
     font-size:16px; font-weight:700;
   }
@@ -442,13 +446,13 @@
 
   svg{ display:block; }
 
-  /* ---- 하단바 (DM) ---- */
+  /* ---- 하단바 (홈 / 검색 / DM) ---- */
   .bottombar{
     height:52px;
     min-height:52px;
     display:flex;
     align-items:center;
-    justify-content:center;
+    justify-content:space-around;
     padding:0 16px;
     border-top:1px solid var(--border);
     background:#fff;
@@ -501,15 +505,26 @@
     display:flex;
     flex-direction:column;
     gap:4px;
-    background:#fff;
+    background:
+      radial-gradient(circle at 88% 18%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 3%),
+      radial-gradient(circle at 82% 20%, #ff8fb3 0%, rgba(255,143,179,.55) 22%, rgba(255,143,179,0) 46%),
+      radial-gradient(circle at 60% 46%, #ffb3c9 0%, rgba(255,179,201,.4) 20%, rgba(255,179,201,0) 40%),
+      radial-gradient(circle at 12% 78%, #ff9fbd 0%, rgba(255,159,189,.45) 22%, rgba(255,159,189,0) 44%),
+      linear-gradient(160deg, #ffd9e6 0%, #ffc2d6 45%, #ffb0cb 100%);
   }
   .dm-date-sep{
     text-align:center;
     font-size:11.5px;
-    color:var(--gray-text);
+    color:#9a4763;
     margin:14px 0 10px 0;
   }
   .dm-date-sep:first-child{ margin-top:2px; }
+  .dm-system-msg{
+    text-align:center;
+    font-size:11.5px;
+    color:#9a4763;
+    margin:6px 0 14px 0;
+  }
   .dm-row{
     display:flex;
     justify-content:flex-start;
@@ -529,7 +544,7 @@
   }
   .dm-bubble{
     max-width:70%;
-    background:var(--border);
+    background:#fff8f5;
     color:#111;
     font-size:13.5px;
     line-height:1.4;
@@ -537,15 +552,16 @@
     border-radius:20px;
     word-break:break-word;
     white-space:pre-wrap;
+    box-shadow:0 1px 2px rgba(0,0,0,.06);
   }
   .dm-bubble.mine{
-    background:var(--blue);
+    background:linear-gradient(135deg, #ff5c99, #e0217e);
     color:#fff;
   }
   .dm-time{
     text-align:left;
     font-size:10.5px;
-    color:var(--gray-text);
+    color:#9a4763;
     margin:3px 0 8px 30px;
   }
   .dm-time.mine{
@@ -579,11 +595,13 @@
     align-items:center;
     gap:8px;
     padding:10px 12px;
-    border-top:1px solid var(--border);
+    border-top:1px solid #ffd3e2;
+    background:#fff0f5;
   }
   .dm-input{
     flex:1;
-    border:1px solid var(--border);
+    border:1px solid #ffd3e2;
+    background:#fff;
     border-radius:20px;
     padding:9px 15px;
     font-size:13.5px;
@@ -593,14 +611,14 @@
     flex-shrink:0;
     background:none;
     border:none;
-    color:var(--blue);
+    color:#e0217e;
     font-weight:600;
     font-size:13.5px;
     cursor:pointer;
     padding:6px 4px;
   }
   .dm-send-btn:disabled{
-    color:#b2dffc;
+    color:#f5b8d3;
     cursor:default;
   }
 </style>
@@ -654,9 +672,15 @@
     <div class="grid" id="postGrid"></div>
 
     <div class="bottombar">
+      <button class="icon-btn" id="navHomeBtn" title="홈">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      </button>
       <button class="icon-btn" id="dmOpenBtn" title="메시지">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
         <span class="dm-dot" id="dmDot"></span>
+      </button>
+      <button class="icon-btn" id="navSearchBtn" title="검색">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       </button>
     </div>
   </div>
@@ -674,7 +698,9 @@
           <div class="dm-header-status" id="dmHeaderStatus"></div>
         </div>
       </div>
-      <div style="width:24px"></div>
+      <button class="icon-btn" id="dmResetBtn" title="대화 초기화">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 21v-6h6"/></svg>
+      </button>
     </div>
     <div class="dm-body" id="dmBody"></div>
     <form class="dm-inputbar" id="dmForm">
@@ -834,17 +860,35 @@
   };
 
   /* ---------------------------------------------------------------------
+     [7-1] 디엠 배경 이미지 (선택)
+     - 여기에 이미지 주소를 넣으면 디엠 채팅창 배경이 그 사진으로
+       바뀝니다. (사진에 맞게 자동으로 꽉 채워서 표시됨)
+     - 비워두면("") 지금처럼 핑크색 하트 느낌 그라데이션 배경이 나옵니다.
+     - 넣는 방법 두 가지:
+       1) 인터넷에 있는 이미지 주소를 그대로 넣기
+          예: let dmBackgroundImage = "https://i.imgur.com/abcd123.jpg";
+       2) 깃허브 저장소에 이미지 파일을 같이 올리고(예: bg.jpg를
+          index.html이랑 같은 폴더에 업로드) 파일 이름만 넣기
+          예: let dmBackgroundImage = "bg.jpg";
+  --------------------------------------------------------------------- */
+  let dmBackgroundImage = "dm-bg.png";
+
+  /* ---------------------------------------------------------------------
      [8] 디엠 메시지 목록
-     - text : 메시지 내용
-     - time : 밀리초 타임스탬프(Date.now()). 날짜/시간을 원하는 대로 미리
-              정해서 넣고 싶으면 new Date("2026-08-20T21:30:00").getTime()
-              처럼 넣으면 됩니다. 생략하면 지금 시간으로 채워집니다.
-     - mine : true로 넣으면 juhoon이 보낸 메시지(오른쪽, 파란 말풍선)로
-              표시됩니다. 생략하거나 false면 eom이 보낸 메시지(왼쪽,
-              회색 말풍선 + 프로필 사진)로 표시됩니다.
+     - text   : 메시지 내용
+     - time   : 밀리초 타임스탬프(Date.now()). 날짜/시간을 원하는 대로 미리
+                정해서 넣고 싶으면 new Date("2026-08-20T21:30:00").getTime()
+                처럼 넣으면 됩니다. 생략하면 지금 시간으로 채워집니다.
+     - mine   : true로 넣으면 juhoon이 보낸 메시지(오른쪽, 핑크 말풍선)로
+                표시됩니다. 생략하거나 false면 eom이 보낸 메시지(왼쪽,
+                흰색 말풍선 + 프로필 사진)로 표시됩니다.
+     - system : true로 넣으면 말풍선 없이 가운데 정렬된 안내 문구로
+                표시됩니다. (예: "테마를 Love로 변경했습니다" 같은 시스템
+                알림용) 이때는 mine 값은 무시됩니다.
      예:
      let dmMessages = [
        {text:"자냐", time:new Date("2026-08-20T23:10:00").getTime()},               // eom -> 왼쪽
+       {system:true, text:"테마를 Love로 변경했습니다", time:new Date("2026-08-20T23:11:00").getTime()}, // 가운데 안내문구
        {text:"아니 안자", mine:true, time:new Date("2026-08-21T00:02:00").getTime()}, // juhoon -> 오른쪽
      ];
      화면 하단 입력창에서 직접 쳐서 보내는 메시지는 juhoon이 보낸 메시지
@@ -852,8 +896,25 @@
   --------------------------------------------------------------------- */
   let dmMessages = [
        {text:"자냐", time:new Date("2026-08-17T23:59:00").getTime()},
+       {system:true, text:"테마를 Love로 변경했습니다", time:new Date("2026-08-18T00:00:00").getTime()},
        {text:"성현이 안 잔다", time:new Date("2026-08-20T23:59:00").getTime()},
   ];
+
+  /* ---------------------------------------------------------------------
+     [8-1] 디엠 버전
+     - 위 dmMessages 배열 내용을 바꿀 때마다 이 숫자를 1씩 올려주세요.
+       (예: 1 -> 2 -> 3 ...)
+     - 이 숫자가 브라우저에 저장된 값이랑 다르면, 채팅창에서 그동안
+       직접 입력해서 보냈던 메시지는 전부 지우고 위 dmMessages
+       내용부터 새로 시작합니다. (왼쪽 메시지는 항상 최신 코드를
+       따라가고, 직접 보낸 메시지는 코드 수정할 때마다 초기화됨)
+     - 채팅창 안에는 이거랑 별개로 "대화 초기화" 버튼(우측 상단)도 있어서,
+       버전을 안 올려도 언제든 눌러서 직접 보낸 메시지만 지울 수 있어요.
+  --------------------------------------------------------------------- */
+  let dmMessagesVersion = 1;
+
+  // 위 dmMessages를 "원본" 상태로 따로 보관 (초기화 버튼에서 사용)
+  const defaultDmMessages = JSON.parse(JSON.stringify(dmMessages));
 
   // 댓글은 브라우저(localStorage)에 저장되어 새로고침해도 유지됩니다.
   let allComments = {};
@@ -1080,14 +1141,32 @@
 
   // ---------- 디엠(DM) ----------
   try{
+    const savedVersion = localStorage.getItem('igCloneDmMessagesVersion');
     const saved = JSON.parse(localStorage.getItem('igCloneDmMessages') || 'null');
-    if(Array.isArray(saved)) dmMessages = saved;
+    if(Array.isArray(saved) && String(savedVersion) === String(dmMessagesVersion)){
+      // 버전이 같으면 저장된 대화(직접 보낸 메시지 포함)를 그대로 사용
+      dmMessages = saved;
+    } else {
+      // 버전이 다르거나 저장된 값이 없으면 코드에 적힌 최신 내용으로 새로 시작
+      dmMessages = JSON.parse(JSON.stringify(defaultDmMessages));
+    }
   }catch(e){}
 
   dmMessages.forEach(m=>{ if(!m.time) m.time = Date.now(); });
 
   function saveDmMessages(){
-    try{ localStorage.setItem('igCloneDmMessages', JSON.stringify(dmMessages)); }catch(e){}
+    try{
+      localStorage.setItem('igCloneDmMessages', JSON.stringify(dmMessages));
+      localStorage.setItem('igCloneDmMessagesVersion', String(dmMessagesVersion));
+    }catch(e){}
+  }
+
+  function resetDmMessages(){
+    if(!confirm('대화를 초기화할까요? 직접 보낸 메시지가 모두 삭제됩니다.')) return;
+    dmMessages = JSON.parse(JSON.stringify(defaultDmMessages));
+    dmMessages.forEach(m=>{ if(!m.time) m.time = Date.now(); });
+    saveDmMessages();
+    renderDm();
   }
 
   function formatDmDate(ts){
@@ -1105,6 +1184,15 @@
     document.getElementById('dmHeaderStatus').textContent = dmContact.status || '';
 
     const body = document.getElementById('dmBody');
+
+    if(dmBackgroundImage){
+      body.style.backgroundImage = `url("${dmBackgroundImage}")`;
+      body.style.backgroundSize = 'cover';
+      body.style.backgroundPosition = 'center';
+      body.style.backgroundRepeat = 'no-repeat';
+    } else {
+      body.style.backgroundImage = '';
+    }
 
     if(dmMessages.length === 0){
       body.innerHTML = `
@@ -1125,14 +1213,17 @@
         html += `<div class="dm-date-sep">${dateLabel} ${formatDmTime(m.time)}</div>`;
         lastDateLabel = dateLabel;
       }
-      if(m.mine){
-        // juhoon이 보낸 메시지 -> 오른쪽, 파란 말풍선, 프로필 사진 없음
+      if(m.system){
+        // 시스템 안내 문구 -> 가운데, 말풍선/프로필 사진 없음
+        html += `<div class="dm-system-msg">${escapeHtml(m.text)}</div>`;
+      } else if(m.mine){
+        // juhoon이 보낸 메시지 -> 오른쪽, 핑크 말풍선, 프로필 사진 없음
         html += `
           <div class="dm-row mine"><div class="dm-bubble mine">${escapeHtml(m.text)}</div></div>
           <div class="dm-time mine">${formatDmTime(m.time)}</div>
         `;
       } else {
-        // eom(메인 프로필)이 보낸 메시지 -> 왼쪽, 회색 말풍선, 프로필 사진
+        // eom(메인 프로필)이 보낸 메시지 -> 왼쪽, 흰색 말풍선, 프로필 사진
         html += `
           <div class="dm-row"><img class="dm-avatar" src="${dmContact.avatar}" alt=""><div class="dm-bubble">${escapeHtml(m.text)}</div></div>
           <div class="dm-time">${formatDmTime(m.time)}</div>
@@ -1142,6 +1233,8 @@
     body.innerHTML = html;
     body.scrollTop = body.scrollHeight;
   }
+
+  document.getElementById('dmResetBtn').addEventListener('click', resetDmMessages);
 
   document.getElementById('dmOpenBtn').addEventListener('click', ()=>{
     document.getElementById('dmDot').classList.remove('show');
