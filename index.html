@@ -877,6 +877,15 @@
   let commentPassword = "0817";
 
   /* ---------------------------------------------------------------------
+     [6-1] 하단 돋보기(검색) 아이콘 — 외부 사이트로 연결
+     - 아래 searchLinkUrl 값을 원하는 사이트 주소로 바꾸면, 하단바의
+       돋보기 아이콘을 눌렀을 때 그 주소가 새 탭으로 열립니다.
+     - 예: let searchLinkUrl = "https://www.youtube.com";
+     - 비워두고 싶으면(아무 데도 안 열리게) let searchLinkUrl = ""; 로 두세요.
+  --------------------------------------------------------------------- */
+  let searchLinkUrl = "https://superkts.com/cal/event/20260817";
+
+  /* ---------------------------------------------------------------------
      [7] DM(디엠) 상대방 프로필
      - 이 화면 전체는 "juhoon 계정이 eom(whereiseom) 계정을 보고 있다"는
        가정이라서, DM도 juhoon 입장에서 eom과 나누는 대화입니다.
@@ -1384,6 +1393,11 @@
       closeScreen(btn.dataset.close);
       if(btn.dataset.close === 'storyViewerScreen') stopStoryTimer();
     });
+  });
+
+  // ---------- 하단 돋보기(검색) -> 외부 사이트로 이동 ----------
+  document.getElementById('navSearchBtn').addEventListener('click', ()=>{
+    if(searchLinkUrl) window.open(searchLinkUrl, '_blank');
   });
 
   // ---------- 내 스토리 ----------
