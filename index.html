@@ -444,6 +444,75 @@
   .story-tap-zone.left{ left:0; }
   .story-tap-zone.right{ right:0; }
 
+  /* ---- 홈 버튼 / 돋보기 버튼 팝업 공통 ---- */
+  .popup-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:60;
+    padding:30px;
+  }
+  .popup-overlay.show{ display:flex; }
+  .popup-card{
+    background:#fff;
+    border-radius:14px;
+    padding:16px 16px 18px 16px;
+    width:100%;
+    max-width:300px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+    text-align:center;
+    animation:popupIn .22s ease;
+  }
+  @keyframes popupIn{
+    from{ transform:scale(.9); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+  }
+  .popup-card img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:8px;
+    display:block;
+    background:#eee;
+  }
+  .popup-label{
+    font-size:12.5px;
+    color:var(--gray-text);
+    font-weight:600;
+    margin:12px 0 4px 0;
+  }
+  .popup-caption{
+    font-size:14px;
+    color:#111;
+    line-height:1.4;
+    margin-bottom:14px;
+  }
+  .popup-big-number{
+    font-size:34px;
+    font-weight:800;
+    color:#333;
+    margin-bottom:6px;
+  }
+  .popup-sub{
+    font-size:12px;
+    color:var(--gray-text);
+    margin-bottom:16px;
+  }
+  .popup-close-btn{
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:9px 0;
+    width:100%;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
   svg{ display:block; }
 
   /* ---- 하단바 (홈 / 검색 / DM) ---- */
@@ -760,6 +829,16 @@
     </div>
   </div>
 
+  <!-- ============ 돋보기 버튼 팝업: D-Day ============ -->
+  <div class="popup-overlay" id="ddayPopupOverlay">
+    <div class="popup-card">
+      <div class="popup-label" id="ddayPopupLabel">ㅃㅃ 시급</div>
+      <div class="popup-big-number" id="ddayPopupCount">D+1</div>
+      <div class="popup-sub" id="ddayPopupDate"></div>
+      <button class="popup-close-btn" id="ddayPopupCloseBtn">닫기</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -877,13 +956,12 @@
   let commentPassword = "0817";
 
   /* ---------------------------------------------------------------------
-     [6-1] 하단 돋보기(검색) 아이콘 — 외부 사이트로 연결
-     - 아래 searchLinkUrl 값을 원하는 사이트 주소로 바꾸면, 하단바의
-       돋보기 아이콘을 눌렀을 때 그 주소가 새 탭으로 열립니다.
-     - 예: let searchLinkUrl = "https://www.youtube.com";
-     - 비워두고 싶으면(아무 데도 안 열리게) let searchLinkUrl = ""; 로 두세요.
+     [6-1] 돋보기 버튼 — D-Day 팝업
+     - anniversaryDate 값을 시작일(YYYY-MM-DD)로 바꿔주세요.
+     - 돋보기를 누르면 그 날짜로부터 며칠째인지 팝업으로 보여줍니다.
+       (시작일 당일을 1일차로 계산합니다)
   --------------------------------------------------------------------- */
-  let searchLinkUrl = "https://superkts.com/cal/event/20260817";
+  let anniversaryDate = "2026-08-17";
 
   /* ---------------------------------------------------------------------
      [7] DM(디엠) 상대방 프로필
@@ -1395,9 +1473,23 @@
     });
   });
 
-  // ---------- 하단 돋보기(검색) -> 외부 사이트로 이동 ----------
-  document.getElementById('navSearchBtn').addEventListener('click', ()=>{
-    if(searchLinkUrl) window.open(searchLinkUrl, '_blank');
+  // ---------- 돋보기 버튼 -> D-Day 팝업 ----------
+  function showDdayPopup(){
+    const start = new Date(anniversaryDate + "T00:00:00");
+    const today = new Date();
+    const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diffDays = Math.round((todayMid - startMid) / 86400000) + 1; // 시작일을 1일차로 계산
+    document.getElementById('ddayPopupCount').textContent = `D+${diffDays}`;
+    document.getElementById('ddayPopupDate').textContent = `${anniversaryDate}부터`;
+    document.getElementById('ddayPopupOverlay').classList.add('show');
+  }
+  document.getElementById('navSearchBtn').addEventListener('click', showDdayPopup);
+  document.getElementById('ddayPopupCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('ddayPopupOverlay').classList.remove('show');
+  });
+  document.getElementById('ddayPopupOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'ddayPopupOverlay') document.getElementById('ddayPopupOverlay').classList.remove('show');
   });
 
   // ---------- 내 스토리 ----------
