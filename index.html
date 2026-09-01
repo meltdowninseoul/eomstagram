@@ -1208,10 +1208,13 @@
         const wrap = document.createElement('div');
         wrap.className = "cell-wrap";
         const ytId = extractYoutubeId(p.src);
-        const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "";
+        // hqdefault.jpg는 4:3 비율이라 16:9 영상엔 위아래 검은 여백이 낄 수 있어서,
+        // 실제 16:9인 maxresdefault.jpg를 먼저 써보고 없으면(onerror) hqdefault로 대체합니다.
+        const thumbHi = ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : "";
+        const thumbFallback = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "";
         wrap.innerHTML = `
           <div class="cell">
-            <img src="${thumb}" alt="youtube">
+            <img src="${thumbHi}" onerror="this.onerror=null;this.src='${thumbFallback}';" alt="youtube">
             <svg class="yt-badge" width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
           </div>
         `;
