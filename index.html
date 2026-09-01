@@ -1293,19 +1293,23 @@
 
     if(currentCommentsUnsub){ currentCommentsUnsub(); currentCommentsUnsub = null; }
     if(fbEnabled){
+      // orderBy를 where와 같이 쓰면 Firestore에 복합 색인(composite index)이
+      // 미리 만들어져 있어야 해서, 색인이 없을 때도 바로 작동하도록
+      // 정렬은 서버 쿼리 대신 여기 자바스크립트에서 처리합니다.
       currentCommentsUnsub = db.collection('comments')
         .where('postKey', '==', currentPostKey)
-        .orderBy('time')
         .onSnapshot(snapshot=>{
           const list = [];
           snapshot.forEach(doc=>{
             const d = doc.data();
-            list.push({name: d.name, text: d.text, _id: doc.id});
+            list.push({name: d.name, text: d.text, time: d.time || 0, _id: doc.id});
           });
+          list.sort((a,b)=> a.time - b.time);
           allComments[currentPostKey] = list;
           renderComments();
         }, err=>{
           console.warn('댓글 실시간 동기화 실패', err);
+          alert('댓글을 불러오지 못했어요. 콘솔(F12)에서 자세한 오류를 확인해주세요.\n(' + err.message + ')');
         });
     } else {
       renderComments();
